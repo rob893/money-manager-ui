@@ -1,7 +1,26 @@
 <template>
   <v-container fluid>
-    <v-text-field label="Ticker" v-model="tickerStaging" hide-details="auto"></v-text-field>
-    <v-btn color="success" @click="addInvestment(tickerStaging)">Add Investment</v-btn>
+    <v-row align="start">
+      <v-col cols="1">
+        <v-text-field label="Ticker" v-model="tickerStaging" hide-details="auto"></v-text-field>
+      </v-col>
+      <v-col>
+        <v-btn color="success" @click="addInvestment(tickerStaging)">Add Investment</v-btn>
+      </v-col>
+    </v-row>
+
+    <v-row align="start">
+      <v-col cols="1">
+        <v-text-field
+          @input="updateAllocations()"
+          label="Allocation"
+          v-model="allocation"
+          type="number"
+          hide-details="auto"
+        ></v-text-field>
+      </v-col>
+    </v-row>
+
     <v-simple-table>
       <template v-slot:default>
         <thead>
@@ -9,17 +28,23 @@
             <th class="text-left">Ticker</th>
             <th class="text-left">Allocation</th>
             <th class="text-left">Amount</th>
-            <th class="text-left">Remove</th>
+            <th class="text-center">Remove</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="item in investments" :key="item.tickerSymbol">
             <td>{{ item.tickerSymbol }}</td>
             <td>
-              <v-text-field label="allocation" hide-details="auto">{{ item.allocation }}%</v-text-field>
+              <v-text-field v-model="item.allocation" type="number" @change="adjustAllocation(item)"></v-text-field>
             </td>
             <td>${{ item.amount }}</td>
-            <td @click="removeInvestment(item)">X</td>
+            <td class="text-center">
+              <v-btn @click="removeInvestment(item)" color="error"
+                ><v-icon dark>
+                  mdi-close
+                </v-icon></v-btn
+              >
+            </td>
           </tr>
         </tbody>
       </template>
@@ -40,35 +65,50 @@ export interface Investment {
 export default class Home extends Vue {
   private tickerStaging: string | null = null;
   private errorMessage: string | null = null;
+  private allocation: number = 0;
   private budget = 0;
   private investments: Investment[] = [];
 
   private addInvestment(tickerSymbol: string | null): void {
     //debugger;
+    const normalizedTicker = tickerSymbol?.toUpperCase() || '';
+
     if (!tickerSymbol) {
       return;
     }
 
-    this.investments.push({ tickerSymbol, allocation: 0, amount: 0 });
+    if (this.investments.find(inv => inv.tickerSymbol === normalizedTicker)) {
+      this.errorMessage = `You already have ${normalizedTicker} in your plan!`;
+      return;
+    }
+
+    this.investments.push({ tickerSymbol: normalizedTicker, allocation: 0, amount: 0 });
   }
 
-  private adjustAllocation(investment: Investment, allocation: number): void {
+  private adjustAllocation(investment: Investment): void {
+    const { allocation } = investment;
     if (allocation > 100) {
       this.errorMessage = 'Allocations cannot be greater than 100 percent';
       return;
     }
 
-    investment.allocation = allocation;
+    investment.allocation = Number(allocation);
 
     const totalAllocation = this.investments.reduce((prev, curr) => prev + curr.allocation, 0);
 
     if (totalAllocation > 100) {
       this.errorMessage = 'You have allocated more than 100%!';
     }
+
+    this.updateAllocations();
   }
 
   private removeInvestment(investment: Investment): void {
     this.investments = this.investments.filter(invest => invest !== investment);
+  }
+
+  private updateAllocations(): void {
+    this.allocation = Number(this.allocation);
   }
 }
 </script>
