@@ -19,9 +19,10 @@
       "type": "chrome",
       "request": "launch",
       "name": "Launch Chrome against localhost",
-      "urlFilter": "http://localhost:8080/*",
+      "url": "http://localhost:8080",
+      "webRoot": "${workspaceFolder}",
       "port": 9223,
-      "webRoot": "${workspaceFolder}"
+      "breakOnLoad": true
     }
   ]
 }
