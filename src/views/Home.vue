@@ -39,11 +39,7 @@
             </td>
             <td>${{ item.amount }}</td>
             <td class="text-center">
-              <v-btn @click="removeInvestment(item)" color="error"
-                ><v-icon dark>
-                  mdi-close
-                </v-icon></v-btn
-              >
+              <v-btn @click="removeInvestment(item)" color="error"><v-icon dark> mdi-close </v-icon></v-btn>
             </td>
           </tr>
         </tbody>
