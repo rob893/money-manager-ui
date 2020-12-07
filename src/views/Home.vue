@@ -66,7 +66,7 @@ export default class Home extends Vue {
   private budget = 0;
   private investments: Investment[] = [];
 
-  private addInvestment(tickerSymbol: string | null): void {
+  private async addInvestment(tickerSymbol: string | null): Promise<void> {
     const normalizedTicker = tickerSymbol?.toUpperCase() || '';
 
     if (!tickerSymbol) {
