@@ -23,7 +23,7 @@
 
     <v-app-bar app clipped-left>
       <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-toolbar-title>Portfolio Manager</v-toolbar-title>
+      <v-toolbar-title>{{ title }}</v-toolbar-title>
     </v-app-bar>
 
     <v-main>
@@ -34,17 +34,24 @@
       </v-container>
     </v-main>
 
-    <v-footer app>
-      <span>&copy; {{ new Date().getFullYear() }}</span>
-    </v-footer>
+    <Footer></Footer>
   </v-app>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
+import Vue from 'vue';
+import Footer from './components/Footer.vue';
 
-@Component
-export default class App extends Vue {
-  private drawer = false;
-}
+export default Vue.extend({
+  name: 'App',
+
+  components: {
+    Footer
+  },
+
+  data: () => ({
+    drawer: false,
+    title: process.env.VUE_APP_TITLE
+  })
+});
 </script>

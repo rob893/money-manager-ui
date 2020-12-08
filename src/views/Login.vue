@@ -1,6 +1,6 @@
 <template>
-  <div class="about">
-    <h1>This is an about page</h1>
+  <div>
+    <h1>This is the login page</h1>
   </div>
 </template>
 
@@ -8,10 +8,12 @@
 import Vue from 'vue';
 
 export default Vue.extend({
-  name: 'About',
+  name: 'Login',
+
+  data: () => ({}),
 
   mounted(): void {
-    console.log('This is the about page');
+    console.log('This is the login page');
   }
 });
 </script>
