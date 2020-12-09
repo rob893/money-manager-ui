@@ -18,6 +18,14 @@
             <v-list-item-title>Settings</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item v-if="isUserLoggedIn" link @click="logout">
+          <v-list-item-action>
+            <v-icon>mdi-logout</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Logout</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
@@ -30,6 +38,7 @@
 
 <script lang="ts">
 import Vue from 'vue';
+import { authService } from '@/services/AuthService';
 
 export default Vue.extend({
   name: 'Header',
@@ -37,6 +46,19 @@ export default Vue.extend({
   data: () => ({
     drawer: false,
     title: process.env.VUE_APP_TITLE
-  })
+  }),
+
+  methods: {
+    logout(): void {
+      authService.logout();
+      this.$router.push('login');
+    }
+  },
+
+  computed: {
+    isUserLoggedIn(): boolean {
+      return authService.isUserLoggedIn;
+    }
+  }
 });
 </script>
