@@ -1,13 +1,24 @@
 <template>
   <div>
-    <v-card elevation="2">
-      <v-form ref="form" v-model="formValid">
-        <v-text-field v-model="username" :rules="usernameRules" label="Username" required />
-        <v-text-field v-model="password" type="password" :rules="passwordRules" label="Password" required />
-        <v-btn :disabled="!formValid" color="success" class="mr-4" @click="login">Login</v-btn>
-        <v-btn color="error" class="mr-4" @click="resetForm">Clear</v-btn>
-      </v-form>
-    </v-card>
+    <v-container fluid fill-height>
+      <v-row align="center" justify="center">
+        <v-col>
+          <v-card class="mx-auto" elevation="2" max-width="600">
+            <v-card-text>
+              <v-form ref="form" v-model="formValid">
+                <v-text-field v-model="username" :rules="usernameRules" label="Username" required />
+                <v-text-field v-model="password" type="password" :rules="passwordRules" label="Password" required />
+              </v-form>
+            </v-card-text>
+
+            <v-card-actions>
+              <v-btn :disabled="!formValid" color="success" class="mr-4" @click="login">Login</v-btn>
+              <v-btn color="error" class="mr-4" @click="resetForm">Clear</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-col>
+      </v-row>
+    </v-container>
   </div>
 </template>
 

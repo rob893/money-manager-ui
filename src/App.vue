@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <Header />
+    <Header v-on:settings-clicked="showSettings = !showSettings" />
 
     <v-main>
       <v-container fluid>
