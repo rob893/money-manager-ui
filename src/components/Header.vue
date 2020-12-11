@@ -72,7 +72,6 @@ export default Vue.extend({
   methods: {
     logout(): void {
       authService.logout();
-      this.$router.push('login');
     }
   },
 

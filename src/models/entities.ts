@@ -7,3 +7,11 @@ export interface User {
   created: string;
   roles: string[];
 }
+
+export interface Budget {
+  id: number;
+  userId: string;
+  name: string;
+  description?: string;
+  taxFilingStatus: string;
+}

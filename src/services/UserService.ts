@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { User } from '@/models/entities';
-import { authService as authServiceInstance } from './AuthService';
+import { authService } from './AuthService';
 import { MoneyManagerAuthenticatedBaseService } from './MoneyManagerAuthenticatedBaseService';
 import { CursorPaginatedResponse, JSONPatchDocument } from '@/models/misc';
 import { UserToUpdateDto } from '@/models/dtos';
@@ -43,4 +43,4 @@ export class UserService extends MoneyManagerAuthenticatedBaseService {
   }
 }
 
-export const userService = new UserService(axios, authServiceInstance);
+export const userService = new UserService(axios, authService);

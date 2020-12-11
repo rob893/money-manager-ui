@@ -37,8 +37,12 @@ export class LocalStorageService {
   }
 
   public setItem<T>(key: string, value: T): void {
-    const asString = JSON.stringify(value);
-    this.storage.setItem(this.computeKey(key), asString);
+    if (typeof value === 'string') {
+      this.storage.setItem(this.computeKey(key), value);
+    } else {
+      const asString = JSON.stringify(value);
+      this.storage.setItem(this.computeKey(key), asString);
+    }
   }
 
   public removeItem(key: string): void {

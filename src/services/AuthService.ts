@@ -7,6 +7,10 @@ import { MoneyManagerBaseService } from './MoneyManagerBaseService';
 import { Logger } from '@/models/misc';
 
 export class AuthService extends MoneyManagerBaseService {
+  public readonly onUserLoggedIn: ((user: User) => void)[] = [];
+
+  public readonly onUserLoggedOut: (() => void)[] = [];
+
   private readonly localStorageService: LocalStorageService;
 
   private readonly accessTokenStorageKey: string = 'access-token';
@@ -88,6 +92,8 @@ export class AuthService extends MoneyManagerBaseService {
     this.localStorageService.setItem(this.refreshTokenStorageKey, refreshToken);
     this.localStorageService.setItem(this.userStorageKey, user);
 
+    this.onUserLoggedIn.forEach(handler => handler(user));
+
     return result.data;
   }
 
@@ -96,6 +102,7 @@ export class AuthService extends MoneyManagerBaseService {
     this.cachedAccessToken = null;
     this.cachedRefreshToken = null;
     this.cachedLoggedInUser = null;
+    this.onUserLoggedOut.forEach(handler => handler());
   }
 
   public async getAccessToken(): Promise<string | null> {
