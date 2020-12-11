@@ -41,8 +41,10 @@ const router = new VueRouter({
   ]
 });
 
+const unauthenticatedRoutes = new Set<RouteName | string | null | undefined>([RouteName.Login, RouteName.About]);
+
 router.beforeEach((to, _from, next) => {
-  if (to.name !== RouteName.Login && !authService.isUserLoggedIn) {
+  if (!unauthenticatedRoutes.has(to.name) && !authService.isUserLoggedIn) {
     next({ name: RouteName.Login });
   } else {
     next();
