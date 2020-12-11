@@ -4,6 +4,7 @@ import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
 import Budget from '../views/Budget.vue';
 import { authService } from '@/services/AuthService';
+import { RouteName } from './RouteName';
 
 Vue.use(VueRouter);
 
@@ -11,12 +12,12 @@ const router = new VueRouter({
   routes: [
     {
       path: '/home',
-      name: 'Home',
+      name: RouteName.Home,
       component: Home
     },
     {
       path: '/about',
-      name: 'About',
+      name: RouteName.About,
       // route level code-splitting
       // this generates a separate chunk (about.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
@@ -24,30 +25,30 @@ const router = new VueRouter({
     },
     {
       path: '/login',
-      name: 'Login',
+      name: RouteName.Login,
       component: Login
     },
     {
       path: '/budget/:id',
-      name: 'Budget',
+      name: RouteName.Budget,
       component: Budget
     },
     {
       path: '*',
-      name: 'Default',
+      name: RouteName.Default,
       component: Login
     }
   ]
 });
 
 router.beforeEach((to, _from, next) => {
-  if (to.name !== 'Login' && !authService.isUserLoggedIn) {
-    next({ name: 'Login' });
+  if (to.name !== RouteName.Login && !authService.isUserLoggedIn) {
+    next({ name: RouteName.Login });
   } else {
     next();
   }
 });
 
-authService.onUserLoggedOut.push(() => router.push({ name: 'Login' }));
+authService.onUserLoggedOut.push(() => router.push({ name: RouteName.Login }));
 
 export default router;
