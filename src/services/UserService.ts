@@ -1,9 +1,9 @@
 import axios from 'axios';
-import { User } from '@/models/entities';
+import { Budget, User } from '@/models/entities';
 import { authService } from './AuthService';
 import { MoneyManagerAuthenticatedBaseService } from './MoneyManagerAuthenticatedBaseService';
-import { CursorPaginatedResponse, JSONPatchDocument } from '@/models/misc';
-import { UserToUpdateDto } from '@/models/dtos';
+import { CursorPaginatedResponse } from '@/models/misc';
+import { UpdateUserDto } from '@/models/dtos';
 
 export class UserService extends MoneyManagerAuthenticatedBaseService {
   public async getUsers(): Promise<User[]> {
@@ -20,26 +20,23 @@ export class UserService extends MoneyManagerAuthenticatedBaseService {
     return data;
   }
 
-  public async updateUser(id: number, fieldsToUpdate: UserToUpdateDto): Promise<User> {
-    const patchDoc: JSONPatchDocument[] = [];
-
-    Object.keys(fieldsToUpdate).forEach(key => {
-      const value = fieldsToUpdate[key];
-
-      if (!value) {
-        return;
-      }
-
-      patchDoc.push({
-        op: 'add',
-        path: `/${key}`,
-        value
-      });
-    });
+  public async updateUser(id: number, fieldsToUpdate: UpdateUserDto): Promise<User> {
+    const patchDoc = Object.entries(fieldsToUpdate).map(([key, value]) => ({
+      op: 'add',
+      path: `/${key}`,
+      value
+    }));
 
     const { data } = await this.httpClient.patch<User>(`users/${id}`, patchDoc);
 
     return data;
+  }
+
+  public async getBudgetsForUser(userId: number): Promise<Budget[]> {
+    const {
+      data: { nodes }
+    } = await this.httpClient.get<CursorPaginatedResponse<Budget>>(`users/${userId}/budgets?includeEdges=false`);
+    return nodes;
   }
 }
 

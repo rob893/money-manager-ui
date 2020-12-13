@@ -11,12 +11,21 @@
           </v-list-item-content>
         </v-list-item>
 
-        <v-list-item v-if="isUserLoggedIn" link to="/budget/1">
+        <v-list-item v-if="isUserLoggedIn" link to="/budgets/1">
           <v-list-item-action>
             <v-icon>mdi-view-dashboard</v-icon>
           </v-list-item-action>
           <v-list-item-content>
             <v-list-item-title>Dashboard</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+
+        <v-list-item v-if="isUserLoggedIn" link to="/budgets">
+          <v-list-item-action>
+            <v-icon>mdi-currency-usd</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Budgets</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
 

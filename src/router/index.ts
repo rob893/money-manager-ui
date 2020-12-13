@@ -3,6 +3,7 @@ import VueRouter from 'vue-router';
 import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
 import Budget from '../views/Budget.vue';
+import Budgets from '../views/Budgets.vue';
 import { authService } from '@/services/AuthService';
 import { RouteName } from './RouteName';
 
@@ -29,7 +30,12 @@ const router = new VueRouter({
       component: Login
     },
     {
-      path: '/budget/:id',
+      path: '/budgets',
+      name: RouteName.Budgets,
+      component: Budgets
+    },
+    {
+      path: '/budgets/:id',
       name: RouteName.Budget,
       component: Budget
     },

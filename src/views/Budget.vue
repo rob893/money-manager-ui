@@ -8,7 +8,7 @@
 <script lang="ts">
 import { Budget } from '@/models/entities';
 import { Utilities } from '@/helpers/Utilities';
-import { budgetService } from '@/services/BudgetService';
+import { budgetService, userService, authService } from '@/services';
 import Vue from 'vue';
 
 export default Vue.extend({
@@ -22,8 +22,14 @@ export default Vue.extend({
 
   methods: {
     async getBudget(): Promise<void> {
-      const budget = await budgetService.getBudget(this.budgetId || 0);
+      const budget = await userService.getBudgetsForUser(this.userId || 0);
       console.log(budget);
+    }
+  },
+
+  computed: {
+    userId(): number | null {
+      return authService.loggedInUser?.id || null;
     }
   },
 
