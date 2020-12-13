@@ -1,5 +1,6 @@
 import axios, { AxiosStatic } from 'axios';
 import jwtDecode, { JwtPayload } from 'jwt-decode';
+import { Subject } from 'rxjs';
 import { LoginResponse, RefreshTokenResponse } from '@/models/responses';
 import { LocalStorageService, localStorageService as localStorageServiceInstance } from './LocalStorageService';
 import { User } from '@/models/entities';
@@ -7,9 +8,9 @@ import { MoneyManagerBaseService } from './MoneyManagerBaseService';
 import { Logger } from '@/models/misc';
 
 export class AuthService extends MoneyManagerBaseService {
-  public readonly onUserLoggedIn: ((user: User) => void)[] = [];
+  public readonly authChanged: Subject<boolean> = new Subject();
 
-  public readonly onUserLoggedOut: (() => void)[] = [];
+  public readonly unauthorizedActionAttempted: Subject<number> = new Subject();
 
   private readonly localStorageService: LocalStorageService;
 
@@ -92,7 +93,7 @@ export class AuthService extends MoneyManagerBaseService {
     this.localStorageService.setItem(this.refreshTokenStorageKey, refreshToken);
     this.localStorageService.setItem(this.userStorageKey, user);
 
-    this.onUserLoggedIn.forEach(handler => handler(user));
+    this.authChanged.next(true);
 
     return result.data;
   }
@@ -102,7 +103,7 @@ export class AuthService extends MoneyManagerBaseService {
     this.cachedAccessToken = null;
     this.cachedRefreshToken = null;
     this.cachedLoggedInUser = null;
-    this.onUserLoggedOut.forEach(handler => handler());
+    this.authChanged.next(false);
   }
 
   public async getAccessToken(): Promise<string | null> {

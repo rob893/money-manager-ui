@@ -51,6 +51,16 @@ router.beforeEach((to, _from, next) => {
   }
 });
 
-authService.onUserLoggedOut.push(() => router.push({ name: RouteName.Login }));
+authService.unauthorizedActionAttempted.subscribe(statusCode => {
+  if (statusCode === 401 || statusCode === 403) {
+    router.push({ name: RouteName.Login });
+  }
+});
+
+authService.authChanged.subscribe(authStatus => {
+  if (!authStatus) {
+    router.push({ name: RouteName.Login });
+  }
+});
 
 export default router;

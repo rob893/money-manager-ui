@@ -8,10 +8,6 @@
 import Vue from 'vue';
 
 export default Vue.extend({
-  name: 'About',
-
-  mounted(): void {
-    console.log('This is the about page');
-  }
+  name: 'About'
 });
 </script>

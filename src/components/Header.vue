@@ -2,12 +2,30 @@
   <div>
     <v-navigation-drawer v-model="drawer" app clipped>
       <v-list dense>
-        <v-list-item link>
+        <v-list-item v-if="!isUserLoggedIn" link to="/login">
+          <v-list-item-action>
+            <v-icon>mdi-login</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Login</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+
+        <v-list-item v-if="isUserLoggedIn" link to="/budget/1">
           <v-list-item-action>
             <v-icon>mdi-view-dashboard</v-icon>
           </v-list-item-action>
           <v-list-item-content>
             <v-list-item-title>Dashboard</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+
+        <v-list-item link to="/about">
+          <v-list-item-action>
+            <v-icon>mdi-information</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>About</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
 
@@ -57,6 +75,7 @@
 
 <script lang="ts">
 import Vue from 'vue';
+import { Subscription } from 'rxjs';
 import { authService } from '@/services/AuthService';
 import { uiSettingsService } from '@/services/UISettingsService';
 
@@ -66,7 +85,9 @@ export default Vue.extend({
   data: () => ({
     showSettings: false,
     drawer: false,
-    title: process.env.VUE_APP_TITLE
+    title: process.env.VUE_APP_TITLE,
+    isUserLoggedIn: false,
+    authChangedSubscription: new Subscription()
   }),
 
   methods: {
@@ -76,10 +97,6 @@ export default Vue.extend({
   },
 
   computed: {
-    isUserLoggedIn(): boolean {
-      return authService.isUserLoggedIn;
-    },
-
     isDarkThemeSet: {
       get(): boolean {
         return uiSettingsService.darkThemeSet;
@@ -90,6 +107,15 @@ export default Vue.extend({
         uiSettingsService.darkThemeSet = value;
       }
     }
+  },
+
+  mounted(): void {
+    this.isUserLoggedIn = authService.isUserLoggedIn;
+    this.authChangedSubscription = authService.authChanged.subscribe(authStatus => (this.isUserLoggedIn = authStatus));
+  },
+
+  beforeDestroy(): void {
+    this.authChangedSubscription.unsubscribe();
   }
 });
 </script>

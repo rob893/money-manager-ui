@@ -19,7 +19,7 @@ export abstract class MoneyManagerAuthenticatedBaseService extends MoneyManagerB
       response => response,
       async error => {
         if (TypeGuards.isAxiosError(error) && error.response?.status === 401) {
-          const { config, response: { headers } = {} } = error;
+          const { config, response: { headers, status } = {} } = error;
 
           if (headers['x-token-expired'] || headers['X-Token-Expired']) {
             const { token } = await authService.refreshAccessToken();
@@ -28,7 +28,7 @@ export abstract class MoneyManagerAuthenticatedBaseService extends MoneyManagerB
             return this.httpClient(config);
           }
 
-          authService.logout();
+          authService.unauthorizedActionAttempted.next(status);
         }
 
         return Promise.reject(error);
