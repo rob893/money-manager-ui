@@ -15,6 +15,10 @@ export class BudgetService extends MoneyManagerAuthenticatedBaseService {
     return data;
   }
 
+  public deleteBudget(budgetId: number): Promise<void> {
+    return this.httpClient.delete(`budgets/${budgetId}`);
+  }
+
   public async updateBudget(budgetId: number, updateBudgetDto: UpdateBudgetDto): Promise<Budget> {
     const patchDocs = Object.entries(updateBudgetDto).map(([key, value]) => ({
       op: 'add',

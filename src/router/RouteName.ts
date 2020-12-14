@@ -4,5 +4,6 @@ export enum RouteName {
   Budgets = 'Budgets',
   Home = 'Home',
   About = 'About',
+  Dashboard = 'Dashboard',
   Default = 'Default'
 }

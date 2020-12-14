@@ -1,9 +1,10 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
-import Home from '../views/Home.vue';
-import Login from '../views/Login.vue';
-import Budget from '../views/Budget.vue';
-import Budgets from '../views/Budgets.vue';
+import Home from '@/views/Home.vue';
+import Login from '@/views/Login.vue';
+import Budget from '@/views/Budget.vue';
+import Budgets from '@/views/Budgets.vue';
+import Dashboard from '@/views/Dashboard.vue';
 import { authService } from '@/services/AuthService';
 import { RouteName } from './RouteName';
 
@@ -15,6 +16,11 @@ const router = new VueRouter({
       path: '/home',
       name: RouteName.Home,
       component: Home
+    },
+    {
+      path: '/dashboard',
+      name: RouteName.Dashboard,
+      component: Dashboard
     },
     {
       path: '/about',
@@ -42,7 +48,7 @@ const router = new VueRouter({
     {
       path: '*',
       name: RouteName.Default,
-      component: Login
+      component: Dashboard
     }
   ]
 });

@@ -56,7 +56,7 @@ export default Vue.extend({
           this.loading = true;
           await authService.login(this.username, this.password);
           this.errorMessage = null;
-          this.$router.push({ name: RouteName.Budget, params: { id: '1' } });
+          this.$router.push({ name: RouteName.Dashboard });
         } catch (error) {
           if (TypeGuards.isAxiosError(error) && error.response?.status === 401) {
             this.errorMessage = 'Invalid username or password.';
