@@ -42,7 +42,7 @@ export interface Indexable<TValue = any> {
   [key: string]: TValue;
 }
 
-export interface ExpensePerTimeFrame {
+export interface AmountPerTimeFrame {
   annual: number;
   monthly: number;
   biWeekly: number;

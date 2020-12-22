@@ -1,11 +1,50 @@
 <template>
   <div>
     <h1>{{ budget.name }}</h1>
+
     <v-alert v-model="showErrorMessage" type="error" dismissible>{{ errorMessage }}</v-alert>
+
+    <v-data-table
+      :headers="summaryTable.headers"
+      :items="summary"
+      disable-pagination
+      disable-sort
+      disable-filtering
+      :hide-default-footer="true"
+      class="elevation-1"
+      :loading="budgetLoading"
+      loading-text="Loading... Please wait"
+    >
+      <template v-slot:top>
+        <v-toolbar flat>
+          <v-toolbar-title>Summary</v-toolbar-title>
+          <v-divider class="mx-4" inset vertical></v-divider>
+        </v-toolbar>
+      </template>
+
+      <template v-slot:[`item.daily`]="{ item }">
+        {{ formatCurrency(item.daily) }}
+      </template>
+
+      <template v-slot:[`item.weekly`]="{ item }">
+        {{ formatCurrency(item.weekly) }}
+      </template>
+
+      <template v-slot:[`item.monthly`]="{ item }">
+        {{ formatCurrency(item.monthly) }}
+      </template>
+
+      <template v-slot:[`item.annual`]="{ item }">
+        {{ formatCurrency(item.annual) }}
+      </template>
+    </v-data-table>
+
+    <br />
+
     <v-data-table
       :headers="incomeTable.headers"
+      :search="incomeTable.search"
       :items="budget.incomes"
-      :items-per-page="5"
       class="elevation-1"
       :loading="budgetLoading"
       loading-text="Loading... Please wait"
@@ -14,6 +53,13 @@
         <v-toolbar flat>
           <v-toolbar-title>Income</v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
+          <v-text-field
+            v-model="incomeTable.search"
+            append-icon="mdi-magnify"
+            label="Search"
+            single-line
+            hide-details
+          />
           <v-spacer></v-spacer>
           <v-dialog v-model="incomeTable.addIncomeDialog" persistent max-width="600px">
             <template v-slot:activator="{ on, attrs }">
@@ -89,34 +135,34 @@
             </v-card>
           </v-dialog>
 
-          <!-- <v-dialog v-model="dialogDelete" max-width="500px">
+          <v-dialog v-model="incomeTable.showDeleteDialog" max-width="500px">
             <v-card>
               <v-card-title class="headline">Are you sure you want to delete this item?</v-card-title>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="closeDelete">Cancel</v-btn>
-                <v-btn color="blue darken-1" text @click="confirmDeleteStagedBudget">OK</v-btn>
+                <v-btn color="blue darken-1" text @click="closeDeleteIncomeDialog">Cancel</v-btn>
+                <v-btn color="blue darken-1" text @click="confirmDeleteStagedIncome">OK</v-btn>
                 <v-spacer></v-spacer>
               </v-card-actions>
             </v-card>
-          </v-dialog> -->
+          </v-dialog>
         </v-toolbar>
       </template>
 
-      <template v-slot:[`item.amount`]="{ item }"> ${{ item.amount.toFixed(2) }} </template>
+      <template v-slot:[`item.amount`]="{ item }"> {{ formatCurrency(item.amount) }} </template>
       <template v-slot:[`item.incomeType`]="{ item }"> {{ splitAtUpperCase(item.incomeType) }} </template>
 
-      <!-- <template v-slot:[`item.actions`]="{ item }">
-        <v-icon small> mdi-delete </v-icon>
-      </template> -->
+      <template v-slot:[`item.actions`]="{ item }">
+        <v-icon small @click="stageIncomeForDelete(item)"> mdi-delete </v-icon>
+      </template>
     </v-data-table>
 
     <br />
 
     <v-data-table
       :headers="expensesTable.headers"
+      :search="expensesTable.search"
       :items="budget.expenses"
-      :items-per-page="5"
       class="elevation-1"
       :loading="budgetLoading"
       loading-text="Loading... Please wait"
@@ -125,6 +171,13 @@
         <v-toolbar flat>
           <v-toolbar-title>Expenses</v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
+          <v-text-field
+            v-model="expensesTable.search"
+            append-icon="mdi-magnify"
+            label="Search"
+            single-line
+            hide-details
+          />
           <v-spacer></v-spacer>
           <v-dialog v-model="expensesTable.addExpenseDialog" persistent max-width="600px">
             <template v-slot:activator="{ on, attrs }">
@@ -215,24 +268,24 @@
       </template>
 
       <template v-slot:[`item.dailyCost`]="{ item }">
-        ${{ calculateExpensePerTimeFrame(item).daily.toFixed(2) }}
+        {{ formatCurrency(calculateExpensePerTimeFrame(item).daily) }}
       </template>
 
       <template v-slot:[`item.weeklyCost`]="{ item }">
-        ${{ calculateExpensePerTimeFrame(item).weekly.toFixed(2) }}
+        {{ formatCurrency(calculateExpensePerTimeFrame(item).weekly) }}
       </template>
 
       <template v-slot:[`item.monthlyCost`]="{ item }">
-        ${{ calculateExpensePerTimeFrame(item).monthly.toFixed(2) }}
+        {{ formatCurrency(calculateExpensePerTimeFrame(item).monthly) }}
       </template>
 
       <template v-slot:[`item.annualCost`]="{ item }">
-        ${{ calculateExpensePerTimeFrame(item).annual.toFixed(2) }}
+        {{ formatCurrency(calculateExpensePerTimeFrame(item).annual) }}
       </template>
       <template v-slot:[`item.frequency`]="{ item }"> {{ splitAtUpperCase(item.frequency) }} </template>
 
       <template v-slot:[`item.actions`]="{ item }">
-        <v-icon small @click="stageBudgetForDelete(item)"> mdi-delete </v-icon>
+        <v-icon small @click="stageExpenseForDelete(item)"> mdi-delete </v-icon>
       </template>
     </v-data-table>
   </div>
@@ -243,18 +296,50 @@ import Vue from 'vue';
 import { DataTableHeader } from 'vuetify';
 import { Budget, Expense, ExpenseFrequency, Income, IncomeType } from '@/models/entities';
 import { Utilities } from '@/helpers/Utilities';
-import { budgetService, userService, authService, expenseService } from '@/services';
+import { budgetService, userService, authService, expenseService, incomeService } from '@/services';
 import { CreateExpenseForBudgetDto, CreateIncomeForBudgetDto } from '@/models/dtos';
-import { ExpensePerTimeFrame } from '@/models';
+import { AmountPerTimeFrame } from '@/models';
 
 export default Vue.extend({
   name: 'Budget',
 
   data: () => ({
+    summaryTable: {
+      headers: [
+        {
+          text: 'Name',
+          value: 'name',
+          sortable: false
+        },
+        {
+          text: 'Daily',
+          value: 'daily',
+          sortable: false
+        },
+        {
+          text: 'Weekly',
+          value: 'weekly',
+          sortable: false
+        },
+        {
+          text: 'Monthly',
+          value: 'monthly',
+          sortable: false
+        },
+        {
+          text: 'Annual',
+          value: 'annual',
+          sortable: false
+        }
+      ] as DataTableHeader[]
+    },
     incomeTable: {
       addIncomeFormValid: false,
       addIncomeDialog: false,
       addIncomeDialogLoading: false,
+      showDeleteDialog: false,
+      search: '',
+      stagedIncomeForDelete: null as Income | null,
       incomeToAdd: {} as CreateIncomeForBudgetDto,
       nameRules: [(name: string) => !!name || 'Name is required'],
       amountRules: [
@@ -283,7 +368,7 @@ export default Vue.extend({
           value: 'actions',
           sortable: false
         }
-      ] as (DataTableHeader<Income> & { value: [keyof Income] })[]
+      ] as DataTableHeader[]
     },
     expensesTable: {
       addExpenseFormValid: false,
@@ -292,6 +377,7 @@ export default Vue.extend({
       showDeleteDialog: false,
       stagedExpenseForDelete: null as Expense | null,
       expenseToAdd: {} as CreateExpenseForBudgetDto,
+      search: '',
       nameRules: [(name: string) => !!name || 'Name is required'],
       amountRules: [
         (amount: number) => !!amount || 'Amount is required',
@@ -308,7 +394,9 @@ export default Vue.extend({
         },
         {
           text: 'Frequency',
-          value: 'frequency'
+          value: 'frequency',
+          sort: (a: ExpenseFrequency, b: ExpenseFrequency) =>
+            Utilities.getFrequencyNumericValue(a) - Utilities.getFrequencyNumericValue(b)
         },
         {
           text: 'Daily Cost',
@@ -331,7 +419,7 @@ export default Vue.extend({
           value: 'actions',
           sortable: false
         }
-      ] as (DataTableHeader<Expense> & { value: [keyof Expense] })[]
+      ] as DataTableHeader[]
     },
     incomeTypes: Object.values(IncomeType).map(Utilities.splitAtUpperCase),
     expenseFrequencyTypes: Object.values(ExpenseFrequency).map(Utilities.splitAtUpperCase),
@@ -400,7 +488,7 @@ export default Vue.extend({
       }
     },
 
-    stageBudgetForDelete(expense: Expense): void {
+    stageExpenseForDelete(expense: Expense): void {
       this.expensesTable.stagedExpenseForDelete = expense;
       this.expensesTable.showDeleteDialog = true;
     },
@@ -409,7 +497,7 @@ export default Vue.extend({
       const { stagedExpenseForDelete } = this.expensesTable;
 
       if (!stagedExpenseForDelete) {
-        this.showErrorMessageAlert('There is no staged budget to delete.');
+        this.showErrorMessageAlert('There is no staged expense to delete.');
         this.closeDeleteExpenseDialog();
         return;
       }
@@ -429,6 +517,35 @@ export default Vue.extend({
       this.expensesTable.showDeleteDialog = false;
     },
 
+    stageIncomeForDelete(income: Income): void {
+      this.incomeTable.stagedIncomeForDelete = income;
+      this.incomeTable.showDeleteDialog = true;
+    },
+
+    async confirmDeleteStagedIncome(): Promise<void> {
+      const { stagedIncomeForDelete } = this.incomeTable;
+
+      if (!stagedIncomeForDelete) {
+        this.showErrorMessageAlert('There is no staged income to delete.');
+        this.closeDeleteIncomeDialog();
+        return;
+      }
+
+      try {
+        await incomeService.deleteIncome(stagedIncomeForDelete.id);
+        Utilities.removeItemFromArray(this.budget.incomes, stagedIncomeForDelete);
+      } catch {
+        this.showErrorMessageAlert('Unable to delete income.');
+      } finally {
+        this.closeDeleteIncomeDialog();
+      }
+    },
+
+    closeDeleteIncomeDialog(): void {
+      this.incomeTable.stagedIncomeForDelete = null;
+      this.incomeTable.showDeleteDialog = false;
+    },
+
     resetAddIncomeForm(): void {
       (this.$refs.addIncomeForm as any).reset();
     },
@@ -441,14 +558,64 @@ export default Vue.extend({
       return Utilities.splitAtUpperCase(str);
     },
 
-    calculateExpensePerTimeFrame(expense: Expense | Expense[]): ExpensePerTimeFrame {
+    calculateExpensePerTimeFrame(expense: Expense | Expense[]): AmountPerTimeFrame {
       return Utilities.calculateExpensePerTimeFrame(expense);
+    },
+
+    formatCurrency(amount: number): string {
+      return Utilities.formatCurrency(amount);
     }
   },
 
   computed: {
     userId(): number | null {
       return authService.loggedInUser?.id || null;
+    },
+
+    summary(): (AmountPerTimeFrame & { name: string })[] {
+      if (!this.budget.expenses) {
+        return [];
+      }
+
+      const incomeSummary = this.budget.incomes
+        .map<AmountPerTimeFrame>(({ amount: annual }) => ({
+          annual,
+          monthly: annual / 12,
+          biWeekly: annual / 26,
+          weekly: annual / 52,
+          daily: annual / 365
+        }))
+        .reduce(
+          (prev, curr) => ({
+            annual: prev.annual + curr.annual,
+            monthly: prev.monthly + curr.monthly,
+            biWeekly: prev.biWeekly + curr.biWeekly,
+            weekly: prev.weekly + curr.weekly,
+            daily: prev.daily + curr.daily
+          }),
+          { annual: 0, monthly: 0, biWeekly: 0, weekly: 0, daily: 0 }
+        );
+
+      const expenseSummary = Utilities.calculateExpensePerTimeFrame(this.budget.expenses);
+
+      return [
+        {
+          name: 'Total Income',
+          ...incomeSummary
+        },
+        {
+          name: 'Total Expenses',
+          ...expenseSummary
+        },
+        {
+          name: 'Remaining Budget',
+          annual: incomeSummary.annual - expenseSummary.annual,
+          monthly: incomeSummary.monthly - expenseSummary.monthly,
+          biWeekly: incomeSummary.biWeekly - expenseSummary.biWeekly,
+          weekly: incomeSummary.weekly - expenseSummary.weekly,
+          daily: incomeSummary.daily - expenseSummary.daily
+        }
+      ];
     }
   },
 

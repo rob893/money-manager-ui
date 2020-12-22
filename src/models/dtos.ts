@@ -17,13 +17,6 @@ export interface UpdateBudgetDto extends Indexable {
   description?: string;
 }
 
-export interface UpdateExpenseDto extends Indexable {
-  name?: string;
-  description?: string;
-  amount?: number;
-  frequency?: ExpenseFrequency;
-}
-
 export interface CreateIncomeDto {
   budgetId: number;
   name: string;
@@ -34,6 +27,13 @@ export interface CreateIncomeDto {
 
 export type CreateIncomeForBudgetDto = Omit<CreateIncomeDto, 'budgetId'>;
 
+export interface UpdateIncomeDto extends Indexable {
+  name?: string;
+  description?: string;
+  amount?: number;
+  incomeType?: IncomeType;
+}
+
 export interface CreateExpenseDto {
   budgetId: number;
   name: string;
@@ -43,3 +43,10 @@ export interface CreateExpenseDto {
 }
 
 export type CreateExpenseForBudgetDto = Omit<CreateExpenseDto, 'budgetId'>;
+
+export interface UpdateExpenseDto extends Indexable {
+  name?: string;
+  description?: string;
+  amount?: number;
+  frequency?: ExpenseFrequency;
+}

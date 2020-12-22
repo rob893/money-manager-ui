@@ -1,4 +1,4 @@
-import { Expense, ExpenseFrequency, ExpensePerTimeFrame } from '@/models';
+import { Expense, ExpenseFrequency, AmountPerTimeFrame } from '@/models';
 
 export class Utilities {
   public static isNumeric(value: unknown): boolean {
@@ -20,11 +20,32 @@ export class Utilities {
     return false;
   }
 
+  public static getFrequencyNumericValue(freq: ExpenseFrequency): number {
+    switch (freq) {
+      case ExpenseFrequency.Daily:
+        return 1;
+      case ExpenseFrequency.Weekly:
+        return 2;
+      case ExpenseFrequency.BiWeekly:
+        return 3;
+      case ExpenseFrequency.Monthly:
+        return 4;
+      case ExpenseFrequency.Annually:
+        return 5;
+      default:
+        return 0;
+    }
+  }
+
   public static clearObject(obj: Record<string, unknown>): void {
     Object.keys(obj).forEach(key => delete obj[key]);
   }
 
-  public static calculateExpensePerTimeFrame(expense: Expense | Expense[]): ExpensePerTimeFrame {
+  public static formatCurrency(amount: number, currency: string = 'USD'): string {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
+  }
+
+  public static calculateExpensePerTimeFrame(expense: Expense | Expense[]): AmountPerTimeFrame {
     if (Array.isArray(expense)) {
       return expense.reduce(
         (prev, curr) => {
