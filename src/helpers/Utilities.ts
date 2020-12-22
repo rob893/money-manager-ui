@@ -9,6 +9,17 @@ export class Utilities {
     return str.replace(/([A-Z])/g, ' $1').trim();
   }
 
+  public static removeItemFromArray<T>(arr: T[], item: T): boolean {
+    const index = arr.indexOf(item);
+
+    if (index >= 0) {
+      arr.splice(index, 1);
+      return true;
+    }
+
+    return false;
+  }
+
   public static clearObject(obj: Record<string, unknown>): void {
     Object.keys(obj).forEach(key => delete obj[key]);
   }

@@ -200,17 +200,17 @@
             </v-card>
           </v-dialog>
 
-          <!-- <v-dialog v-model="dialogDelete" max-width="500px">
+          <v-dialog v-model="expensesTable.showDeleteDialog" max-width="500px">
             <v-card>
               <v-card-title class="headline">Are you sure you want to delete this item?</v-card-title>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="closeDelete">Cancel</v-btn>
-                <v-btn color="blue darken-1" text @click="confirmDeleteStagedBudget">OK</v-btn>
+                <v-btn color="blue darken-1" text @click="closeDeleteExpenseDialog">Cancel</v-btn>
+                <v-btn color="blue darken-1" text @click="confirmDeleteStagedExpense">OK</v-btn>
                 <v-spacer></v-spacer>
               </v-card-actions>
             </v-card>
-          </v-dialog> -->
+          </v-dialog>
         </v-toolbar>
       </template>
 
@@ -231,9 +231,9 @@
       </template>
       <template v-slot:[`item.frequency`]="{ item }"> {{ splitAtUpperCase(item.frequency) }} </template>
 
-      <!-- <template v-slot:[`item.actions`]="{ item }">
-        <v-icon small> mdi-delete </v-icon>
-      </template> -->
+      <template v-slot:[`item.actions`]="{ item }">
+        <v-icon small @click="stageBudgetForDelete(item)"> mdi-delete </v-icon>
+      </template>
     </v-data-table>
   </div>
 </template>
@@ -243,7 +243,7 @@ import Vue from 'vue';
 import { DataTableHeader } from 'vuetify';
 import { Budget, Expense, ExpenseFrequency, Income, IncomeType } from '@/models/entities';
 import { Utilities } from '@/helpers/Utilities';
-import { budgetService, userService, authService } from '@/services';
+import { budgetService, userService, authService, expenseService } from '@/services';
 import { CreateExpenseForBudgetDto, CreateIncomeForBudgetDto } from '@/models/dtos';
 import { ExpensePerTimeFrame } from '@/models';
 
@@ -289,6 +289,8 @@ export default Vue.extend({
       addExpenseFormValid: false,
       addExpenseDialog: false,
       addExpenseDialogLoading: false,
+      showDeleteDialog: false,
+      stagedExpenseForDelete: null as Expense | null,
       expenseToAdd: {} as CreateExpenseForBudgetDto,
       nameRules: [(name: string) => !!name || 'Name is required'],
       amountRules: [
@@ -396,6 +398,35 @@ export default Vue.extend({
         this.expensesTable.addExpenseDialog = false;
         this.resetAddExpenseForm();
       }
+    },
+
+    stageBudgetForDelete(expense: Expense): void {
+      this.expensesTable.stagedExpenseForDelete = expense;
+      this.expensesTable.showDeleteDialog = true;
+    },
+
+    async confirmDeleteStagedExpense(): Promise<void> {
+      const { stagedExpenseForDelete } = this.expensesTable;
+
+      if (!stagedExpenseForDelete) {
+        this.showErrorMessageAlert('There is no staged budget to delete.');
+        this.closeDeleteExpenseDialog();
+        return;
+      }
+
+      try {
+        await expenseService.deleteExpense(stagedExpenseForDelete.id);
+        Utilities.removeItemFromArray(this.budget.expenses, stagedExpenseForDelete);
+      } catch {
+        this.showErrorMessageAlert('Unable to delete expense.');
+      } finally {
+        this.closeDeleteExpenseDialog();
+      }
+    },
+
+    closeDeleteExpenseDialog(): void {
+      this.expensesTable.stagedExpenseForDelete = null;
+      this.expensesTable.showDeleteDialog = false;
     },
 
     resetAddIncomeForm(): void {
