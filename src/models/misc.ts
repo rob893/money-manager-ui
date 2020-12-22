@@ -41,3 +41,11 @@ export interface JSONPatchDocument {
 export interface Indexable<TValue = any> {
   [key: string]: TValue;
 }
+
+export interface ExpensePerTimeFrame {
+  annual: number;
+  monthly: number;
+  biWeekly: number;
+  weekly: number;
+  daily: number;
+}

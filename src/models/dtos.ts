@@ -35,4 +35,4 @@ export interface CreateExpenseDto {
   frequency: ExpenseFrequency;
 }
 
-export type CreateExpenseForBudgetDto = Omit<CreateBudgetDto, 'budgetId'>;
+export type CreateExpenseForBudgetDto = Omit<CreateExpenseDto, 'budgetId'>;
