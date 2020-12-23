@@ -2,6 +2,7 @@
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 
 module.exports = {
+  publicPath: './',
   lintOnSave: false,
   transpileDependencies: ['vuetify'],
   configureWebpack: {
