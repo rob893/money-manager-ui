@@ -57,4 +57,4 @@ jobs:
         run: ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} 'rm -rf /var/www/html/money-manager/* '
       - name: Copy builds to remote server
         run: |
-          scp -r ./* ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/var/www/html/money-manager
+          scp -r ./money-manager-ui-v*/* ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/var/www/html/money-manager
