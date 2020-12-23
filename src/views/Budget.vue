@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>{{ budget.name }} FART</h1>
+    <h1>{{ budget.name }}</h1>
 
     <v-alert v-model="showErrorMessage" type="error" dismissible>{{ errorMessage }}</v-alert>
 
