@@ -42,7 +42,7 @@ jobs:
       - name: Upload build
         uses: actions/upload-artifact@v2
         with:
-          name: money-manager-ui-v${{ steps.package-version.outputs.version }}
+          name: money-manager-ui-b${{ github.run_number }}-v${{ steps.package-version.outputs.version }}
           path: ./dist
 
   deploy:
@@ -63,5 +63,4 @@ jobs:
       - name: Clean remote directories
         run: ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} 'mkdir -p /var/www/html/money-manager && rm -rf /var/www/html/money-manager/* '
       - name: Copy builds to remote server
-        run: |
-          scp -r ./money-manager-ui-v*/* ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/var/www/html/money-manager
+        run: scp -r ./money-manager-ui-b${{ github.run_number }}-v*/* ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/var/www/html/money-manager
