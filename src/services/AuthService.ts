@@ -98,6 +98,26 @@ export class AuthService extends MoneyManagerBaseService {
     return result.data;
   }
 
+  public async loginGoogle(idToken: string): Promise<LoginResponse> {
+    const result = await this.httpClient.post<LoginResponse>('auth/login/google', {
+      idToken
+    });
+
+    const { token, refreshToken, user } = result.data;
+
+    this.cachedAccessToken = token;
+    this.cachedRefreshToken = refreshToken;
+    this.cachedLoggedInUser = user;
+
+    this.localStorageService.setItem(this.accessTokenStorageKey, token);
+    this.localStorageService.setItem(this.refreshTokenStorageKey, refreshToken);
+    this.localStorageService.setItem(this.userStorageKey, user);
+
+    this.authChanged.next(true);
+
+    return result.data;
+  }
+
   public logout(): void {
     this.localStorageService.clear();
     this.cachedAccessToken = null;

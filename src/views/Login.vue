@@ -69,9 +69,21 @@ export default Vue.extend({
   }),
 
   methods: {
-    googleSignInSuccess(googleUser: gapi.auth2.GoogleUser): void {
-      // const googleUser = await this.$gAuth.signIn();
-      console.log(googleUser);
+    async googleSignInSuccess(googleUser: gapi.auth2.GoogleUser): Promise<void> {
+      try {
+        this.loading = true;
+        await authService.loginGoogle(googleUser.getAuthResponse().id_token);
+        this.errorMessage = null;
+        this.$router.push({ name: RouteName.Dashboard });
+      } catch (error) {
+        if (TypeGuards.isAxiosError(error) && error.response?.status === 401) {
+          this.errorMessage = 'Invalid username or password.';
+        } else {
+          this.errorMessage = 'Something went wrong.';
+        }
+      } finally {
+        this.loading = false;
+      }
     },
 
     googleSignInFailure(): void {
