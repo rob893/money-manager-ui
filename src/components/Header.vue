@@ -100,8 +100,14 @@ export default Vue.extend({
   }),
 
   methods: {
-    logout(): void {
+    async logout(): Promise<void> {
       authService.logout();
+
+      if (typeof gapi?.auth2?.getAuthInstance === 'function') {
+        const googleAuth = gapi.auth2.getAuthInstance();
+
+        await googleAuth.signOut();
+      }
     }
   },
 

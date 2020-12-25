@@ -22,6 +22,12 @@
             <v-card-actions v-if="!loading">
               <v-btn :disabled="!formValid" color="success" class="mr-4" @click="login">Login</v-btn>
               <v-btn color="error" class="mr-4" @click="resetForm">Clear</v-btn>
+              <GoogleLogin
+                :params="googleLoginParams"
+                :onSuccess="googleSignInSuccess"
+                :renderParams="renderParams"
+                :onFailure="googleSignInFailure"
+              ></GoogleLogin>
             </v-card-actions>
           </v-card>
         </v-col>
@@ -32,6 +38,7 @@
 
 <script lang="ts">
 import Vue from 'vue';
+import GoogleLogin from 'vue-google-login';
 import { authService } from '@/services/AuthService';
 import { TypeGuards } from '@/helpers/TypeGuards';
 import { RouteName } from '@/router/RouteName';
@@ -39,7 +46,19 @@ import { RouteName } from '@/router/RouteName';
 export default Vue.extend({
   name: 'Login',
 
+  components: {
+    GoogleLogin
+  },
+
   data: () => ({
+    googleLoginParams: {
+      client_id: '504553588506-joctqv1rhpn8o06apgdb2904qfi6fn26.apps.googleusercontent.com'
+    },
+    renderParams: {
+      width: 250,
+      height: 50,
+      longtitle: true
+    },
     username: null as string | null,
     usernameRules: [(username: string) => !!username || 'Username is required'],
     password: null as string | null,
@@ -50,6 +69,16 @@ export default Vue.extend({
   }),
 
   methods: {
+    googleSignInSuccess(googleUser: gapi.auth2.GoogleUser): void {
+      // const googleUser = await this.$gAuth.signIn();
+      console.log(googleUser);
+    },
+
+    googleSignInFailure(): void {
+      // const googleUser = await this.$gAuth.signIn();
+      // console.log(googleUser);
+    },
+
     async login(): Promise<void> {
       if (this.username && this.password) {
         try {

@@ -18,6 +18,8 @@
     "register-service-worker": "^1.7.2",
     "rxjs": "^6.6.3",
     "vue": "^2.6.11",
+    "vue-google-login": "^2.0.5",
+    "vue-google-oauth2": "^1.5.5",
     "vue-router": "^3.4.9",
     "vuetify": "^2.4.0",
     "vuex": "^3.6.0"
@@ -25,6 +27,7 @@
   "devDependencies": {
     "@commitlint/cli": "^11.0.0",
     "@commitlint/config-conventional": "^11.0.0",
+    "@types/gapi.auth2": "0.0.52",
     "@typescript-eslint/eslint-plugin": "^4.11.0",
     "@typescript-eslint/parser": "^4.11.0",
     "@vue/cli-plugin-babel": "^4.5.9",
