@@ -50,3 +50,11 @@ export interface UpdateExpenseDto extends Indexable {
   amount?: number;
   frequency?: ExpenseFrequency;
 }
+
+export interface RegisterUserDto {
+  username: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}

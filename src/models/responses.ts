@@ -6,6 +6,8 @@ export interface LoginResponse {
   user: User;
 }
 
+export type RegisterResponse = LoginResponse;
+
 export interface RefreshTokenResponse {
   token: string;
   refreshToken: string;

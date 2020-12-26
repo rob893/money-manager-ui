@@ -6,6 +6,13 @@ export interface User {
   email: string;
   created: string;
   roles: string[];
+  linkedAccounts: LinkedAccount[];
+}
+
+export interface LinkedAccount {
+  id: string;
+  linkedAccountType: LinkedAccountType;
+  userId: number;
 }
 
 export interface Budget {
@@ -64,4 +71,8 @@ export enum IncomeType {
   W2 = 'W2',
   ShortTermCapitalGains = 'ShortTermCapitalGains',
   LongTermCapitalGains = 'LongTermCapitalGains'
+}
+
+export enum LinkedAccountType {
+  Google = 'Google'
 }

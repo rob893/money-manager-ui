@@ -49,3 +49,12 @@ export interface AmountPerTimeFrame {
   weekly: number;
   daily: number;
 }
+
+export enum HttpVerb {
+  Get = 'GET',
+  Post = 'POST',
+  Patch = 'PATCH',
+  Delete = 'DELETE',
+  Put = 'PUT',
+  Options = 'OPTIONS'
+}

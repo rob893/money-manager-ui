@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import Home from '@/views/Home.vue';
+import Register from '@/views/Register.vue';
 import Login from '@/views/Login.vue';
 import Budget from '@/views/Budget.vue';
 import Budgets from '@/views/Budgets.vue';
@@ -31,6 +32,11 @@ const router = new VueRouter({
       component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
     },
     {
+      path: '/register',
+      name: RouteName.Register,
+      component: Register
+    },
+    {
       path: '/login',
       name: RouteName.Login,
       component: Login
@@ -53,7 +59,11 @@ const router = new VueRouter({
   ]
 });
 
-const unauthenticatedRoutes = new Set<RouteName | string | null | undefined>([RouteName.Login, RouteName.About]);
+const unauthenticatedRoutes = new Set<RouteName | string | null | undefined>([
+  RouteName.Login,
+  RouteName.About,
+  RouteName.Register
+]);
 
 router.beforeEach((to, _from, next) => {
   if (!unauthenticatedRoutes.has(to.name) && !authService.isUserLoggedIn) {

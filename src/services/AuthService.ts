@@ -1,11 +1,12 @@
 import axios, { AxiosStatic } from 'axios';
 import jwtDecode, { JwtPayload } from 'jwt-decode';
 import { Subject } from 'rxjs';
-import { LoginResponse, RefreshTokenResponse } from '@/models/responses';
+import { LoginResponse, RefreshTokenResponse, RegisterResponse } from '@/models/responses';
 import { LocalStorageService, localStorageService as localStorageServiceInstance } from './LocalStorageService';
 import { User } from '@/models/entities';
 import { MoneyManagerBaseService } from './MoneyManagerBaseService';
 import { Logger } from '@/models/misc';
+import { RegisterUserDto } from '@/models';
 
 export class AuthService extends MoneyManagerBaseService {
   public readonly authChanged: Subject<boolean> = new Subject();
@@ -77,45 +78,44 @@ export class AuthService extends MoneyManagerBaseService {
     return this.cachedRefreshToken;
   }
 
+  public async registerUser(registerUserDto: RegisterUserDto): Promise<RegisterResponse> {
+    const { data } = await this.httpClient.post<RegisterResponse>('auth/register', registerUserDto);
+
+    this.handleLoginOrRegisterResponse(data);
+
+    return data;
+  }
+
+  public async registerUserUsingGoogleAccount(username: string, idToken: string): Promise<RegisterResponse> {
+    const { data } = await this.httpClient.post<RegisterResponse>('auth/register/google', {
+      username,
+      idToken
+    });
+
+    this.handleLoginOrRegisterResponse(data);
+
+    return data;
+  }
+
   public async login(username: string, password: string): Promise<LoginResponse> {
-    const result = await this.httpClient.post<LoginResponse>('auth/login', {
+    const { data } = await this.httpClient.post<LoginResponse>('auth/login', {
       username,
       password
     });
 
-    const { token, refreshToken, user } = result.data;
+    this.handleLoginOrRegisterResponse(data);
 
-    this.cachedAccessToken = token;
-    this.cachedRefreshToken = refreshToken;
-    this.cachedLoggedInUser = user;
-
-    this.localStorageService.setItem(this.accessTokenStorageKey, token);
-    this.localStorageService.setItem(this.refreshTokenStorageKey, refreshToken);
-    this.localStorageService.setItem(this.userStorageKey, user);
-
-    this.authChanged.next(true);
-
-    return result.data;
+    return data;
   }
 
   public async loginGoogle(idToken: string): Promise<LoginResponse> {
-    const result = await this.httpClient.post<LoginResponse>('auth/login/google', {
+    const { data } = await this.httpClient.post<LoginResponse>('auth/login/google', {
       idToken
     });
 
-    const { token, refreshToken, user } = result.data;
+    this.handleLoginOrRegisterResponse(data);
 
-    this.cachedAccessToken = token;
-    this.cachedRefreshToken = refreshToken;
-    this.cachedLoggedInUser = user;
-
-    this.localStorageService.setItem(this.accessTokenStorageKey, token);
-    this.localStorageService.setItem(this.refreshTokenStorageKey, refreshToken);
-    this.localStorageService.setItem(this.userStorageKey, user);
-
-    this.authChanged.next(true);
-
-    return result.data;
+    return data;
   }
 
   public logout(): void {
@@ -165,6 +165,18 @@ export class AuthService extends MoneyManagerBaseService {
     const nowUTCSeconds = Date.now() / 1000;
 
     return nowUTCSeconds >= exp - expOffsetInSeconds;
+  }
+
+  private handleLoginOrRegisterResponse({ token, refreshToken, user }: LoginResponse | RegisterResponse): void {
+    this.cachedAccessToken = token;
+    this.cachedRefreshToken = refreshToken;
+    this.cachedLoggedInUser = user;
+
+    this.localStorageService.setItem(this.accessTokenStorageKey, token);
+    this.localStorageService.setItem(this.refreshTokenStorageKey, refreshToken);
+    this.localStorageService.setItem(this.userStorageKey, user);
+
+    this.authChanged.next(true);
   }
 }
 

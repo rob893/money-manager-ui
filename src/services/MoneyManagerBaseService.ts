@@ -1,5 +1,5 @@
 import { TypeGuards } from '@/helpers/TypeGuards';
-import { Logger } from '@/models/misc';
+import { HttpVerb, Logger } from '@/models/misc';
 import { AxiosInstance, AxiosStatic } from 'axios';
 
 export abstract class MoneyManagerBaseService {
@@ -19,7 +19,11 @@ export abstract class MoneyManagerBaseService {
     this.httpClient.interceptors.response.use(
       response => response,
       error => {
-        if (TypeGuards.isAxiosError(error) && error.response?.status === 404) {
+        if (
+          TypeGuards.isAxiosError(error) &&
+          error.config.method?.toUpperCase() === HttpVerb.Get &&
+          error.response?.status === 404
+        ) {
           const { response } = error;
           response.data = null;
 

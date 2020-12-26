@@ -27,6 +27,7 @@
                 :onSuccess="googleSignInSuccess"
                 :renderParams="renderParams"
                 :onFailure="googleSignInFailure"
+                @click="loading = true"
               ></GoogleLogin>
             </v-card-actions>
           </v-card>
@@ -42,6 +43,7 @@ import GoogleLogin from 'vue-google-login';
 import { authService } from '@/services/AuthService';
 import { TypeGuards } from '@/helpers/TypeGuards';
 import { RouteName } from '@/router/RouteName';
+import { LinkedAccountType } from '@/models';
 
 export default Vue.extend({
   name: 'Login',
@@ -70,14 +72,18 @@ export default Vue.extend({
 
   methods: {
     async googleSignInSuccess(googleUser: gapi.auth2.GoogleUser): Promise<void> {
+      this.loading = true;
+
       try {
-        this.loading = true;
-        await authService.loginGoogle(googleUser.getAuthResponse().id_token);
+        const idToken = googleUser.getAuthResponse().id_token;
+        await authService.loginGoogle(idToken);
         this.errorMessage = null;
         this.$router.push({ name: RouteName.Dashboard });
       } catch (error) {
         if (TypeGuards.isAxiosError(error) && error.response?.status === 401) {
           this.errorMessage = 'Invalid username or password.';
+        } else if (TypeGuards.isAxiosError(error) && error.response?.status === 404) {
+          this.$router.push({ name: RouteName.Register, query: { socialLogin: LinkedAccountType.Google } });
         } else {
           this.errorMessage = 'Something went wrong.';
         }
