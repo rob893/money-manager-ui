@@ -22,6 +22,8 @@ export abstract class MoneyManagerAuthenticatedBaseService extends MoneyManagerB
           const { config, response: { headers, status } = {} } = error;
 
           if (headers['x-token-expired'] || headers['X-Token-Expired']) {
+            this.logger.debug('x-token-expired header present with 401 auth code. Attempting to refresh token...');
+
             const { token } = await authService.refreshAccessToken();
             config.headers.authorization = `Bearer ${token}`;
 

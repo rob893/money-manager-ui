@@ -5,3 +5,4 @@ export * from './UISettingsService';
 export * from './UserService';
 export * from './ExpenseService';
 export * from './IncomeService';
+export * from './GoogleAuthService';

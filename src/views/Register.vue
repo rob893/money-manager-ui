@@ -94,7 +94,7 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import { authService } from '@/services';
+import { authService, googleAuthService } from '@/services';
 import { RouteName } from '@/router/RouteName';
 import { LinkedAccountType } from '@/models';
 
@@ -194,12 +194,11 @@ export default Vue.extend({
     if (
       socialLogin &&
       socialLogin === LinkedAccountType.Google &&
-      gapi &&
-      typeof gapi?.auth2?.getAuthInstance === 'function' &&
-      gapi.auth2.getAuthInstance().isSignedIn.get()
+      googleAuthService.isSignedIn &&
+      googleAuthService.currentUser
     ) {
       this.socialLoginType = LinkedAccountType.Google;
-      const currentUser = gapi.auth2.getAuthInstance().currentUser.get();
+      const currentUser = googleAuthService.currentUser;
 
       this.registerUsingGoogleAccountForm.idToken = currentUser.getAuthResponse().id_token;
       this.registerUsingGoogleAccountForm.username = currentUser.getBasicProfile().getEmail()?.split('@')[0] || null;

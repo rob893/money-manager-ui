@@ -3,8 +3,8 @@
     <v-container fluid fill-height>
       <v-row align="center" justify="center">
         <v-col>
-          <v-card class="mx-auto" elevation="2" max-width="600">
-            <v-card-title>Login </v-card-title>
+          <v-card class="mx-auto" elevation="2" max-width="400">
+            <v-card-title class="justify-center">Login</v-card-title>
 
             <v-card-text>
               <v-alert v-if="errorMessage" type="error">{{ errorMessage }}</v-alert>
@@ -15,21 +15,26 @@
               </v-form>
             </v-card-text>
 
-            <v-card-actions v-if="loading">
+            <v-card-actions v-if="loading" class="justify-center">
               <v-progress-circular indeterminate color="primary"></v-progress-circular>
             </v-card-actions>
 
-            <v-card-actions v-if="!loading">
-              <v-btn :disabled="!formValid" color="success" class="mr-4" @click="login">Login</v-btn>
+            <v-card-actions v-if="!loading" class="justify-center">
+              <v-btn :disabled="!formValid" color="success" class="mr-4" type="submit" @click="login">Login</v-btn>
               <v-btn color="error" class="mr-4" @click="resetForm">Clear</v-btn>
-              <GoogleLogin
-                :params="googleLoginParams"
-                :onSuccess="googleSignInSuccess"
-                :renderParams="renderParams"
-                :onFailure="googleSignInFailure"
-                @click="loading = true"
-              ></GoogleLogin>
             </v-card-actions>
+
+            <v-card-text v-if="!loading" class="text-center"><strong>Or</strong></v-card-text>
+
+            <v-card-actions v-if="!loading" class="justify-center">
+              <v-btn color="white" class="google-btn" @click="googleLogin"
+                ><img src="img/google-logo.png" alt="Google logo" class="google-btn-logo" /><span
+                  class="google-btn-text"
+                  >Continue with Google</span
+                ></v-btn
+              >
+            </v-card-actions>
+            <br />
           </v-card>
         </v-col>
       </v-row>
@@ -39,8 +44,7 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import GoogleLogin from 'vue-google-login';
-import { authService } from '@/services/AuthService';
+import { authService, googleAuthService } from '@/services';
 import { TypeGuards } from '@/helpers/TypeGuards';
 import { RouteName } from '@/router/RouteName';
 import { LinkedAccountType } from '@/models';
@@ -48,19 +52,7 @@ import { LinkedAccountType } from '@/models';
 export default Vue.extend({
   name: 'Login',
 
-  components: {
-    GoogleLogin
-  },
-
   data: () => ({
-    googleLoginParams: {
-      client_id: '504553588506-joctqv1rhpn8o06apgdb2904qfi6fn26.apps.googleusercontent.com'
-    },
-    renderParams: {
-      width: 250,
-      height: 50,
-      longtitle: true
-    },
     username: null as string | null,
     usernameRules: [(username: string) => !!username || 'Username is required'],
     password: null as string | null,
@@ -71,14 +63,15 @@ export default Vue.extend({
   }),
 
   methods: {
-    async googleSignInSuccess(googleUser: gapi.auth2.GoogleUser): Promise<void> {
+    async googleLogin(): Promise<void> {
       this.loading = true;
 
       try {
+        const googleUser = await googleAuthService.signIn();
         const idToken = googleUser.getAuthResponse().id_token;
         await authService.loginGoogle(idToken);
         this.errorMessage = null;
-        this.$router.push({ name: RouteName.Dashboard });
+        this.$router.push({ name: RouteName.Budgets });
       } catch (error) {
         if (TypeGuards.isAxiosError(error) && error.response?.status === 401) {
           this.errorMessage = 'Invalid username or password.';
@@ -90,11 +83,6 @@ export default Vue.extend({
       } finally {
         this.loading = false;
       }
-    },
-
-    googleSignInFailure(): void {
-      // const googleUser = await this.$gAuth.signIn();
-      // console.log(googleUser);
     },
 
     async login(): Promise<void> {
@@ -125,3 +113,19 @@ export default Vue.extend({
   }
 });
 </script>
+
+<style scoped>
+.google-btn {
+  width: 240px;
+  height: 36px;
+}
+.google-btn-text {
+  color: black;
+}
+
+.google-btn-logo {
+  width: 2rem;
+  height: 2rem;
+  padding: 3%;
+}
+</style>
