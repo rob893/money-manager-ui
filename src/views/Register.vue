@@ -7,7 +7,7 @@
             <v-form
               ref="registerUsingGoogleAccountForm"
               v-model="registerUsingGoogleAccountForm.formValid"
-              @submit.prevent="resetRegisterUsingGoogleAccountForm"
+              @submit.prevent="registerUsingGoogleAccount"
             >
               <v-card-title class="justify-center">Register using Google Account</v-card-title>
 

@@ -1,5 +1,6 @@
 import axios, { AxiosStatic } from 'axios';
 import jwtDecode, { JwtPayload } from 'jwt-decode';
+import { v4 as uuid } from 'uuid';
 import { Subject } from 'rxjs';
 import { LoginResponse, RefreshTokenResponse, RegisterResponse } from '@/models/responses';
 import { LocalStorageService, localStorageService as localStorageServiceInstance } from './LocalStorageService';
@@ -19,11 +20,15 @@ export class AuthService extends MoneyManagerBaseService {
 
   private readonly refreshTokenStorageKey: string = 'refresh-token';
 
+  private readonly deviceIdStorageKey: string = 'device-id';
+
   private readonly userStorageKey: string = 'user';
 
   private cachedAccessToken: string | null = null;
 
   private cachedRefreshToken: string | null = null;
+
+  private cachedDeviceId: string | null = null;
 
   private cachedLoggedInUser: User | null = null;
 
@@ -78,8 +83,26 @@ export class AuthService extends MoneyManagerBaseService {
     return this.cachedRefreshToken;
   }
 
+  private get deviceId(): string {
+    if (!this.cachedDeviceId) {
+      const deviceIdFromLocalStorage = this.localStorageService.getItem(this.deviceIdStorageKey);
+
+      if (!deviceIdFromLocalStorage) {
+        this.cachedDeviceId = uuid();
+        this.localStorageService.setItem(this.deviceIdStorageKey, this.cachedDeviceId);
+      } else {
+        this.cachedDeviceId = deviceIdFromLocalStorage;
+      }
+    }
+
+    return this.cachedDeviceId;
+  }
+
   public async registerUser(registerUserDto: RegisterUserDto): Promise<RegisterResponse> {
-    const { data } = await this.httpClient.post<RegisterResponse>('auth/register', registerUserDto);
+    const { data } = await this.httpClient.post<RegisterResponse>('auth/register', {
+      ...registerUserDto,
+      deviceId: this.deviceId
+    });
 
     this.handleLoginOrRegisterResponse(data);
 
@@ -89,7 +112,8 @@ export class AuthService extends MoneyManagerBaseService {
   public async registerUserUsingGoogleAccount(username: string, idToken: string): Promise<RegisterResponse> {
     const { data } = await this.httpClient.post<RegisterResponse>('auth/register/google', {
       username,
-      idToken
+      idToken,
+      deviceId: this.deviceId
     });
 
     this.handleLoginOrRegisterResponse(data);
@@ -100,7 +124,8 @@ export class AuthService extends MoneyManagerBaseService {
   public async login(username: string, password: string): Promise<LoginResponse> {
     const { data } = await this.httpClient.post<LoginResponse>('auth/login', {
       username,
-      password
+      password,
+      deviceId: this.deviceId
     });
 
     this.handleLoginOrRegisterResponse(data);
@@ -110,7 +135,8 @@ export class AuthService extends MoneyManagerBaseService {
 
   public async loginGoogle(idToken: string): Promise<LoginResponse> {
     const { data } = await this.httpClient.post<LoginResponse>('auth/login/google', {
-      idToken
+      idToken,
+      deviceId: this.deviceId
     });
 
     this.handleLoginOrRegisterResponse(data);
@@ -120,6 +146,7 @@ export class AuthService extends MoneyManagerBaseService {
 
   public logout(): void {
     this.localStorageService.clear();
+    this.cachedDeviceId = null;
     this.cachedAccessToken = null;
     this.cachedRefreshToken = null;
     this.cachedLoggedInUser = null;
@@ -141,7 +168,8 @@ export class AuthService extends MoneyManagerBaseService {
   public async refreshAccessToken(): Promise<RefreshTokenResponse> {
     const result = await this.httpClient.post<RefreshTokenResponse>('auth/refreshToken', {
       token: this.accessToken,
-      refreshToken: this.refreshToken
+      refreshToken: this.refreshToken,
+      deviceId: this.deviceId
     });
 
     const { token, refreshToken } = result.data;
