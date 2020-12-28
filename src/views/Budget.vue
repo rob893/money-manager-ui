@@ -45,9 +45,11 @@
       :headers="incomeTable.headers"
       :search="incomeTable.search"
       :items="budget.incomes"
-      class="elevation-1"
+      :expanded.sync="incomeTable.expanded"
       :loading="budgetLoading"
       loading-text="Loading... Please wait"
+      show-expand
+      class="elevation-1"
     >
       <template v-slot:top>
         <v-toolbar flat>
@@ -66,11 +68,12 @@
               <v-btn color="primary" dark v-bind="attrs" v-on="on"> Add Income </v-btn>
             </template>
             <v-card>
-              <v-card-title>
-                <span class="headline">Add Income to {{ budget.name }}</span>
-              </v-card-title>
-              <v-card-text>
-                <v-form ref="addIncomeForm" v-model="incomeTable.addIncomeFormValid">
+              <v-form ref="addIncomeForm" v-model="incomeTable.addIncomeFormValid" @submit.prevent="addIncomeToBudget">
+                <v-card-title>
+                  <span class="headline">Add Income to {{ budget.name }}</span>
+                </v-card-title>
+
+                <v-card-text>
                   <v-container>
                     <v-row>
                       <v-col cols="12" sm="6">
@@ -81,6 +84,7 @@
                           required
                         ></v-text-field>
                       </v-col>
+
                       <v-col cols="12" sm="6">
                         <v-text-field
                           label="Annual Amount*"
@@ -90,9 +94,11 @@
                           required
                         ></v-text-field>
                       </v-col>
+
                       <v-col cols="12">
                         <v-textarea label="Description" v-model="incomeTable.incomeToAdd.description"></v-textarea>
                       </v-col>
+
                       <v-col cols="12" sm="6">
                         <v-select
                           :items="incomeTypes"
@@ -104,34 +110,29 @@
                     </v-row>
                   </v-container>
                   <small>*indicates required field</small>
-                </v-form>
-              </v-card-text>
+                </v-card-text>
 
-              <v-card-actions v-if="incomeTable.addIncomeDialogLoading">
-                <v-progress-circular indeterminate color="primary" />
-              </v-card-actions>
+                <v-card-actions v-if="incomeTable.addIncomeDialogLoading" class="justify-center">
+                  <v-progress-circular indeterminate color="primary" />
+                </v-card-actions>
 
-              <v-card-actions v-else>
-                <v-spacer></v-spacer>
-                <v-btn
-                  color="blue darken-1"
-                  text
-                  @click="
-                    incomeTable.addIncomeDialog = false;
-                    resetAddIncomeForm();
-                  "
-                >
-                  Close
-                </v-btn>
-                <v-btn
-                  color="blue darken-1"
-                  text
-                  @click="addIncomeToBudget"
-                  :disabled="!incomeTable.addIncomeFormValid"
-                >
-                  Add
-                </v-btn>
-              </v-card-actions>
+                <v-card-actions v-else>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    color="blue darken-1"
+                    text
+                    @click="
+                      incomeTable.addIncomeDialog = false;
+                      resetAddIncomeForm();
+                    "
+                  >
+                    Close
+                  </v-btn>
+                  <v-btn color="blue darken-1" text type="submit" :disabled="!incomeTable.addIncomeFormValid">
+                    Add
+                  </v-btn>
+                </v-card-actions>
+              </v-form>
             </v-card>
           </v-dialog>
 
@@ -149,6 +150,12 @@
         </v-toolbar>
       </template>
 
+      <template v-slot:expanded-item="{ headers, item }">
+        <td :colspan="headers.length">
+          Description:<br /><br />{{ item.description || `No description set for ${item.name}.` }}<br />
+        </td>
+      </template>
+
       <template v-slot:[`item.amount`]="{ item }"> {{ formatCurrency(item.amount) }} </template>
       <template v-slot:[`item.incomeType`]="{ item }"> {{ splitAtUpperCase(item.incomeType) }} </template>
 
@@ -163,9 +170,11 @@
       :headers="expensesTable.headers"
       :search="expensesTable.search"
       :items="budget.expenses"
-      class="elevation-1"
+      :expanded.sync="expensesTable.expanded"
       :loading="budgetLoading"
+      show-expand
       loading-text="Loading... Please wait"
+      class="elevation-1"
     >
       <template v-slot:top>
         <v-toolbar flat>
@@ -184,11 +193,15 @@
               <v-btn color="primary" dark v-bind="attrs" v-on="on"> Add Expense </v-btn>
             </template>
             <v-card>
-              <v-card-title>
-                <span class="headline">Add Expense to {{ budget.name }}</span>
-              </v-card-title>
-              <v-card-text>
-                <v-form ref="addExpenseForm" v-model="expensesTable.addExpenseFormValid">
+              <v-form
+                ref="addExpenseForm"
+                v-model="expensesTable.addExpenseFormValid"
+                @submit.prevent="addExpenseToBudget"
+              >
+                <v-card-title>
+                  <span class="headline">Add Expense to {{ budget.name }}</span>
+                </v-card-title>
+                <v-card-text>
                   <v-container>
                     <v-row>
                       <v-col cols="12" sm="6">
@@ -222,34 +235,29 @@
                     </v-row>
                   </v-container>
                   <small>*indicates required field</small>
-                </v-form>
-              </v-card-text>
+                </v-card-text>
 
-              <v-card-actions v-if="expensesTable.addExpenseDialogLoading">
-                <v-progress-circular indeterminate color="primary" />
-              </v-card-actions>
+                <v-card-actions v-if="expensesTable.addExpenseDialogLoading" class="justify-center">
+                  <v-progress-circular indeterminate color="primary" />
+                </v-card-actions>
 
-              <v-card-actions v-else>
-                <v-spacer></v-spacer>
-                <v-btn
-                  color="blue darken-1"
-                  text
-                  @click="
-                    expensesTable.addExpenseDialog = false;
-                    resetAddExpenseForm();
-                  "
-                >
-                  Close
-                </v-btn>
-                <v-btn
-                  color="blue darken-1"
-                  text
-                  @click="addExpenseToBudget"
-                  :disabled="!expensesTable.addExpenseFormValid"
-                >
-                  Add
-                </v-btn>
-              </v-card-actions>
+                <v-card-actions v-else>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    color="blue darken-1"
+                    text
+                    @click="
+                      expensesTable.addExpenseDialog = false;
+                      resetAddExpenseForm();
+                    "
+                  >
+                    Close
+                  </v-btn>
+                  <v-btn color="blue darken-1" text type="submit" :disabled="!expensesTable.addExpenseFormValid">
+                    Add
+                  </v-btn>
+                </v-card-actions>
+              </v-form>
             </v-card>
           </v-dialog>
 
@@ -265,6 +273,12 @@
             </v-card>
           </v-dialog>
         </v-toolbar>
+      </template>
+
+      <template v-slot:expanded-item="{ headers, item }">
+        <td :colspan="headers.length">
+          Description:<br /><br />{{ item.description || `No description set for ${item.name}.` }}<br />
+        </td>
       </template>
 
       <template v-slot:[`item.dailyCost`]="{ item }">
@@ -334,6 +348,7 @@ export default Vue.extend({
       ] as DataTableHeader[]
     },
     incomeTable: {
+      expanded: [],
       addIncomeFormValid: false,
       addIncomeDialog: false,
       addIncomeDialogLoading: false,
@@ -371,6 +386,7 @@ export default Vue.extend({
       ] as DataTableHeader[]
     },
     expensesTable: {
+      expanded: [],
       addExpenseFormValid: false,
       addExpenseDialog: false,
       addExpenseDialogLoading: false,
@@ -387,10 +403,6 @@ export default Vue.extend({
         {
           text: 'Name',
           value: 'name'
-        },
-        {
-          text: 'Description',
-          value: 'description'
         },
         {
           text: 'Frequency',

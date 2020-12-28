@@ -1,12 +1,13 @@
 <template>
   <div>
     <v-data-table
+      @click:row="viewBudgetDetails"
       :headers="headers"
       :items="budgets"
       :items-per-page="5"
-      class="elevation-1"
       :loading="budgetsLoading"
       loading-text="Loading... Please wait"
+      class="elevation-1 table-row-cursor"
     >
       <template v-slot:top>
         <v-toolbar flat>
@@ -15,14 +16,16 @@
           <v-spacer></v-spacer>
           <v-dialog v-model="dialog" persistent max-width="600px">
             <template v-slot:activator="{ on, attrs }">
-              <v-btn color="primary" dark v-bind="attrs" v-on="on"> Create Budget </v-btn>
+              <v-btn color="primary" dark v-bind="attrs" v-on="on">Create Budget</v-btn>
             </template>
+
             <v-card>
-              <v-card-title>
-                <span class="headline">Create New Budget</span>
-              </v-card-title>
-              <v-card-text>
-                <v-form ref="createBudgetForm" v-model="formValid">
+              <v-form ref="createBudgetForm" v-model="formValid" @submit.prevent="createBudget">
+                <v-card-title>
+                  <span class="headline">Create New Budget</span>
+                </v-card-title>
+
+                <v-card-text>
                   <v-container>
                     <v-row>
                       <v-col cols="12" sm="6">
@@ -33,9 +36,11 @@
                           required
                         ></v-text-field>
                       </v-col>
+
                       <v-col cols="12">
                         <v-textarea label="Description" v-model="budgetToCreate.description"></v-textarea>
                       </v-col>
+
                       <v-col cols="12" sm="6">
                         <v-select
                           :items="taxFilingStatuses"
@@ -46,19 +51,20 @@
                       </v-col>
                     </v-row>
                   </v-container>
+
                   <small>*indicates required field</small>
-                </v-form>
-              </v-card-text>
+                </v-card-text>
 
-              <v-card-actions v-if="loading">
-                <v-progress-circular indeterminate color="primary" />
-              </v-card-actions>
+                <v-card-actions v-if="loading" class="justify-center">
+                  <v-progress-circular indeterminate color="primary" />
+                </v-card-actions>
 
-              <v-card-actions v-else>
-                <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="dialog = false"> Close </v-btn>
-                <v-btn color="blue darken-1" text @click="createBudget" :disabled="!formValid"> Create </v-btn>
-              </v-card-actions>
+                <v-card-actions v-else>
+                  <v-spacer></v-spacer>
+                  <v-btn color="blue darken-1" text @click="dialog = false">Close</v-btn>
+                  <v-btn color="blue darken-1" text type="submit" :disabled="!formValid">Create</v-btn>
+                </v-card-actions>
+              </v-form>
             </v-card>
           </v-dialog>
 
@@ -76,12 +82,8 @@
         </v-toolbar>
       </template>
 
-      <template v-slot:[`item.name`]="{ item }">
-        <router-link :to="{ name: 'Budget', params: { id: item.id } }">{{ item.name }}</router-link>
-      </template>
-
       <template v-slot:[`item.actions`]="{ item }">
-        <v-icon small @click="stageBudgetForDelete(item)"> mdi-delete </v-icon>
+        <v-icon small @click.stop.prevent="stageBudgetForDelete(item)">mdi-delete</v-icon>
       </template>
     </v-data-table>
   </div>
@@ -93,6 +95,7 @@ import { DataTableHeader } from 'vuetify';
 import { authService, budgetService, userService } from '@/services';
 import { TaxFilingStatus, CreateBudgetDto, Budget } from '@/models';
 import { Utilities } from '@/helpers';
+import { RouteName } from '@/router/RouteName';
 
 export default Vue.extend({
   name: 'Budgets',
@@ -123,7 +126,7 @@ export default Vue.extend({
         value: 'actions',
         sortable: false
       }
-    ] as (DataTableHeader<Budget> & { value: [keyof Budget] })[]
+    ] as DataTableHeader[]
   }),
 
   async mounted(): Promise<void> {
@@ -133,6 +136,10 @@ export default Vue.extend({
   },
 
   methods: {
+    viewBudgetDetails(selectedBudget: Budget): void {
+      this.$router.push({ name: RouteName.Budget, params: { id: selectedBudget.id.toString() } });
+    },
+
     async createBudget(): Promise<void> {
       if (!this.budgetToCreate.name) {
         return;
@@ -191,3 +198,9 @@ export default Vue.extend({
   }
 });
 </script>
+
+<style scoped>
+.table-row-cursor >>> tbody tr :hover {
+  cursor: pointer;
+}
+</style>
