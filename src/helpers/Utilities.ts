@@ -41,6 +41,10 @@ export class Utilities {
     Object.keys(obj).forEach(key => delete obj[key]);
   }
 
+  public static isEmptyObject(obj: Record<string, unknown>): boolean {
+    return Object.keys(obj).length === 0;
+  }
+
   public static formatCurrency(amount: number, currency: string = 'USD'): string {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
   }

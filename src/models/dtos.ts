@@ -13,7 +13,13 @@ export interface CreateBudgetDto {
   taxFilingStatus?: TaxFilingStatus;
 }
 
+export interface EditFormField<TValue = any> {
+  edited: boolean;
+  value: TValue;
+}
+
 export interface UpdateBudgetDto extends Indexable {
+  name?: string;
   description?: string;
 }
 
