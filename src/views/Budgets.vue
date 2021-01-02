@@ -49,7 +49,7 @@
                           :items="taxFilingStatuses"
                           label="Tax Filing Status"
                           required
-                          @change="value => (budgetToCreate.taxFilingStatus = value.replace(/ /g, ''))"
+                          v-model="budgetToCreate.taxFilingStatus"
                         ></v-select>
                       </v-col>
                     </v-row>
@@ -166,7 +166,10 @@ export default Vue.extend({
       name: { edited: false, value: '' },
       description: { edited: false, value: '' }
     } as { [key in keyof Required<UpdateBudgetDto>]: EditFormField<string> },
-    taxFilingStatuses: Object.values(TaxFilingStatus).map(value => Utilities.splitAtUpperCase(value)),
+    taxFilingStatuses: Object.values(TaxFilingStatus).map(value => ({
+      text: Utilities.splitAtUpperCase(value),
+      value
+    })),
     formValid: false,
     budgetNameRules: [(name: string) => !!name || 'Name is required'],
     budgetToCreate: {} as CreateBudgetDto,

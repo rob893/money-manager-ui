@@ -20,15 +20,19 @@
                   <v-btn color="error" class="mr-4" @click="resetForm">Clear</v-btn>
                 </v-card-actions>
 
-                <v-card-text v-if="!loading" class="text-center"><strong>Or</strong></v-card-text>
+                <v-card-text class="text-center"><strong>Or</strong></v-card-text>
 
-                <v-card-actions v-if="!loading" class="justify-center">
+                <v-card-actions class="justify-center">
                   <v-btn color="white" class="google-btn" @click="googleLogin"
                     ><img src="img/google-logo.png" alt="Google logo" class="google-btn-logo" /><span
                       class="google-btn-text"
                       >Continue with Google</span
                     ></v-btn
                   >
+                </v-card-actions>
+
+                <v-card-actions class="justify-center">
+                  <router-link to="/register">Not signed up yet? Sign up!</router-link>
                 </v-card-actions>
               </div>
 

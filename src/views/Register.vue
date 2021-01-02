@@ -86,14 +86,22 @@
                 <small>*indicates required field</small>
               </v-card-text>
 
-              <v-card-actions v-if="!loading" class="justify-center">
-                <v-btn :disabled="!registerForm.formValid" color="success" class="mr-4" type="submit">Continue</v-btn>
-                <v-btn color="error" class="mr-4" @click="resetRegisterForm">Clear</v-btn>
-              </v-card-actions>
+              <div v-if="!loading">
+                <v-card-actions class="justify-center">
+                  <v-btn :disabled="!registerForm.formValid" color="success" class="mr-4" type="submit">Continue</v-btn>
+                  <v-btn color="error" class="mr-4" @click="resetRegisterForm">Clear</v-btn>
+                </v-card-actions>
+
+                <v-card-actions class="justify-center">
+                  <router-link to="/login">Already signed up? Log in!</router-link>
+                </v-card-actions>
+              </div>
 
               <v-card-actions v-else class="justify-center">
                 <v-progress-circular indeterminate color="primary"></v-progress-circular>
               </v-card-actions>
+
+              <br />
             </v-form>
           </v-card>
         </v-col>

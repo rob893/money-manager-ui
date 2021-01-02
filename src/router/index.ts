@@ -1,11 +1,11 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
-import Home from '@/views/Home.vue';
 import Register from '@/views/Register.vue';
 import Login from '@/views/Login.vue';
 import Budget from '@/views/Budget.vue';
 import Budgets from '@/views/Budgets.vue';
 import Dashboard from '@/views/Dashboard.vue';
+import Tools from '@/views/Tools.vue';
 import { authService } from '@/services/AuthService';
 import { RouteName } from './RouteName';
 
@@ -13,11 +13,6 @@ Vue.use(VueRouter);
 
 const router = new VueRouter({
   routes: [
-    {
-      path: '/home',
-      name: RouteName.Home,
-      component: Home
-    },
     {
       path: '/dashboard',
       name: RouteName.Dashboard,
@@ -50,6 +45,11 @@ const router = new VueRouter({
       path: '/budgets/:id',
       name: RouteName.Budget,
       component: Budget
+    },
+    {
+      path: '/tools',
+      name: RouteName.Tools,
+      component: Tools
     },
     {
       path: '*',

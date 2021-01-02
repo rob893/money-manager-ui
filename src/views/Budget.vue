@@ -1,6 +1,11 @@
 <template>
   <div>
     <h1>{{ budget.name }}</h1>
+    <div>
+      <router-link to="/budgets"><v-icon>mdi-keyboard-backspace</v-icon>Back to budgets</router-link>
+    </div>
+
+    <br />
 
     <v-alert v-model="showErrorMessage" type="error" dismissible>{{ errorMessage }}</v-alert>
 
@@ -104,7 +109,7 @@
                           :items="incomeTypes"
                           label="Income Type*"
                           required
-                          @change="value => (incomeTable.incomeToAdd.incomeType = value.replace(/ /g, ''))"
+                          v-model="incomeTable.incomeToAdd.incomeType"
                         ></v-select>
                       </v-col>
                     </v-row>
@@ -229,7 +234,7 @@
                           :items="expenseFrequencyTypes"
                           label="Frequency*"
                           required
-                          @change="value => (expensesTable.expenseToAdd.frequency = value.replace(/ /g, ''))"
+                          v-model="expensesTable.expenseToAdd.frequency"
                         ></v-select>
                       </v-col>
                     </v-row>
@@ -256,6 +261,77 @@
                   <v-btn color="blue darken-1" text type="submit" :disabled="!expensesTable.addExpenseFormValid">
                     Add
                   </v-btn>
+                </v-card-actions>
+              </v-form>
+            </v-card>
+          </v-dialog>
+
+          <v-dialog v-model="expensesTable.editDialog" persistent max-width="600px">
+            <v-card>
+              <v-form ref="editExpenseForm" v-model="expensesTable.editFormValid" @submit.prevent="saveEditExpense">
+                <v-card-title>
+                  <span class="headline"
+                    >Edit
+                    {{ expensesTable.stagedExpenseForEdit ? expensesTable.stagedExpenseForEdit.name : 'Expense' }}</span
+                  >
+                </v-card-title>
+
+                <v-card-text>
+                  <v-container>
+                    <v-row>
+                      <v-col cols="12" sm="6">
+                        <v-text-field
+                          label="Name"
+                          :rules="expensesTable.nameRules"
+                          v-model="expensesTable.expenseToEdit.name.value"
+                          @input="expensesTable.expenseToEdit.name.edited = true"
+                        />
+                      </v-col>
+
+                      <v-col cols="12" sm="6">
+                        <v-text-field
+                          label="Amount"
+                          :rules="expensesTable.amountRules"
+                          v-model.number="expensesTable.expenseToEdit.amount.value"
+                          @input="expensesTable.expenseToEdit.amount.edited = true"
+                          type="number"
+                        ></v-text-field>
+                      </v-col>
+
+                      <v-col cols="12">
+                        <v-textarea
+                          label="Description"
+                          v-model="expensesTable.expenseToEdit.description.value"
+                          @input="expensesTable.expenseToEdit.description.edited = true"
+                        />
+                      </v-col>
+
+                      <v-col cols="12" sm="6">
+                        <v-select
+                          :items="expenseFrequencyTypes"
+                          label="Frequency"
+                          v-model="expensesTable.expenseToEdit.frequency.value"
+                          @change="expensesTable.expenseToEdit.frequency.edited = true"
+                        ></v-select>
+                      </v-col>
+                    </v-row>
+                  </v-container>
+                </v-card-text>
+
+                <v-card-actions v-if="expensesTable.editDialogLoading" class="justify-center">
+                  <v-progress-circular indeterminate color="primary" />
+                </v-card-actions>
+
+                <v-card-actions v-else>
+                  <v-spacer></v-spacer>
+                  <v-btn color="blue darken-1" text @click="closeEditExpenseDialog">Close</v-btn>
+                  <v-btn
+                    color="blue darken-1"
+                    text
+                    type="submit"
+                    :disabled="Object.keys(editedExpenseValues).length === 0"
+                    >Save</v-btn
+                  >
                 </v-card-actions>
               </v-form>
             </v-card>
@@ -299,6 +375,7 @@
       <template v-slot:[`item.frequency`]="{ item }"> {{ splitAtUpperCase(item.frequency) }} </template>
 
       <template v-slot:[`item.actions`]="{ item }">
+        <v-icon small class="mr-2" @click="editExpense(item)"> mdi-pencil </v-icon>
         <v-icon small @click="stageExpenseForDelete(item)"> mdi-delete </v-icon>
       </template>
     </v-data-table>
@@ -311,8 +388,8 @@ import { DataTableHeader } from 'vuetify';
 import { Budget, Expense, ExpenseFrequency, Income, IncomeType } from '@/models/entities';
 import { Utilities } from '@/helpers/Utilities';
 import { budgetService, userService, authService, expenseService, incomeService } from '@/services';
-import { CreateExpenseForBudgetDto, CreateIncomeForBudgetDto } from '@/models/dtos';
-import { AmountPerTimeFrame } from '@/models';
+import { CreateExpenseForBudgetDto, CreateIncomeForBudgetDto, EditFormField, UpdateExpenseDto } from '@/models/dtos';
+import { AmountPerTimeFrame, Indexable } from '@/models';
 
 export default Vue.extend({
   name: 'Budget',
@@ -393,6 +470,17 @@ export default Vue.extend({
       showDeleteDialog: false,
       stagedExpenseForDelete: null as Expense | null,
       expenseToAdd: {} as CreateExpenseForBudgetDto,
+      editDialog: false,
+      editFormValid: false,
+      editDialogLoading: false,
+      editExpenseIndex: -1,
+      stagedExpenseForEdit: null as Expense | null,
+      expenseToEdit: {
+        name: { edited: false, value: '' },
+        description: { edited: false, value: '' },
+        amount: { edited: false, value: 0 },
+        frequency: { edited: false, value: '' }
+      } as { [key in keyof Required<UpdateExpenseDto>]: EditFormField<string | number> },
       search: '',
       nameRules: [(name: string) => !!name || 'Name is required'],
       amountRules: [
@@ -433,8 +521,11 @@ export default Vue.extend({
         }
       ] as DataTableHeader[]
     },
-    incomeTypes: Object.values(IncomeType).map(Utilities.splitAtUpperCase),
-    expenseFrequencyTypes: Object.values(ExpenseFrequency).map(Utilities.splitAtUpperCase),
+    incomeTypes: Object.values(IncomeType).map(value => ({ text: Utilities.splitAtUpperCase(value), value })),
+    expenseFrequencyTypes: Object.values(ExpenseFrequency).map(value => ({
+      text: Utilities.splitAtUpperCase(value),
+      value
+    })),
     budgetLoading: false,
     budgetId: null as number | null,
     budget: {} as Budget,
@@ -498,6 +589,60 @@ export default Vue.extend({
         this.expensesTable.addExpenseDialog = false;
         this.resetAddExpenseForm();
       }
+    },
+
+    editExpense(expense: Expense): void {
+      this.expensesTable.editExpenseIndex = this.budget.expenses.indexOf(expense);
+      Object.keys(this.expensesTable.expenseToEdit).forEach(key => {
+        this.expensesTable.expenseToEdit[key] = {
+          edited: false,
+          value: (expense as Indexable)[key]
+        };
+      });
+      this.expensesTable.stagedExpenseForEdit = expense;
+      this.expensesTable.editDialog = true;
+    },
+
+    async saveEditExpense(): Promise<void> {
+      const {
+        budget: { expenses }
+      } = this;
+      const { stagedExpenseForEdit, expenseToEdit, editExpenseIndex } = this.expensesTable;
+      if (!stagedExpenseForEdit || !expenseToEdit) {
+        this.errorMessage = 'No budget staged for editing.';
+        this.closeEditExpenseDialog();
+        return;
+      }
+
+      if (Utilities.isEmptyObject(this.editedExpenseValues)) {
+        this.closeEditExpenseDialog();
+        return;
+      }
+
+      this.expensesTable.editDialogLoading = true;
+
+      try {
+        const updatedExpense = await expenseService.updateExpense(stagedExpenseForEdit.id, this.editedExpenseValues);
+        expenses.splice(editExpenseIndex, 1, { ...stagedExpenseForEdit, ...updatedExpense });
+      } catch (error) {
+        this.errorMessage = `Unable to update budget: ${error.message}`;
+      } finally {
+        this.closeEditExpenseDialog();
+        this.expensesTable.editDialogLoading = false;
+      }
+    },
+
+    closeEditExpenseDialog(): void {
+      this.expensesTable.stagedExpenseForEdit = null;
+      this.expensesTable.editExpenseIndex = -1;
+      this.expensesTable.editDialog = false;
+      Object.keys(this.expensesTable.expenseToEdit).forEach(key => {
+        this.expensesTable.expenseToEdit[key] = {
+          edited: false,
+          value: ''
+        };
+      });
+      this.resetEditExpenseForm();
     },
 
     stageExpenseForDelete(expense: Expense): void {
@@ -566,6 +711,10 @@ export default Vue.extend({
       (this.$refs.addExpenseForm as any).reset();
     },
 
+    resetEditExpenseForm(): void {
+      (this.$refs.editExpenseForm as any).reset();
+    },
+
     splitAtUpperCase(str: string): string {
       return Utilities.splitAtUpperCase(str);
     },
@@ -628,6 +777,12 @@ export default Vue.extend({
           daily: incomeSummary.daily - expenseSummary.daily
         }
       ];
+    },
+
+    editedExpenseValues(): UpdateExpenseDto {
+      return Object.entries(this.expensesTable.expenseToEdit)
+        .filter(([, value]) => value && value.edited)
+        .reduce((prev, [key, { value }]) => ({ ...prev, [key]: value }), {});
     }
   },
 

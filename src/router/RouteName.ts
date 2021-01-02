@@ -3,8 +3,8 @@ export enum RouteName {
   Login = 'Login',
   Budget = 'Budget',
   Budgets = 'Budgets',
-  Home = 'Home',
   About = 'About',
   Dashboard = 'Dashboard',
-  Default = 'Default'
+  Default = 'Default',
+  Tools = 'Tools'
 }
